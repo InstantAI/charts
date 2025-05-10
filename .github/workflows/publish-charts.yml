@@ -36,10 +36,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish charts
+      - name: Publish instantai chart
+        if: contains(github.event.head_commit.modified, 'instantai/Chart.yaml')
         run: |
-          for chart in instantai instantai-api; do
-            if [ -f "$chart/Chart.yaml" ]; then
-              echo "Publishing $chart..."
-              helm package $chart
-              helm push $chart-$(yq e '.version' $chart/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }} 
+          helm package instantai
+          helm push instantai-$(yq e '.version' instantai/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
+
+      - name: Publish instantai-api chart
+        if: contains(github.event.head_commit.modified, 'instantai-api/Chart.yaml')
+        run: |
+          helm package instantai-api
+          helm push instantai-api-$(yq e '.version' instantai-api/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }} 
