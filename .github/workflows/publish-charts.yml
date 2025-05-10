@@ -44,14 +44,10 @@ jobs:
             instantai/Chart.yaml
             instantai-api/Chart.yaml
 
-      - name: Publish instantai chart
-        if: steps.changed-files.outputs.instantai_Chart_yaml == 'true'
+      - name: Package and Push Helm Charts
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           helm package instantai
-          helm push instantai-$(yq e '.version' instantai/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
-
-      - name: Publish instantai-api chart
-        if: steps.changed-files.outputs.instantai_api_Chart_yaml == 'true'
-        run: |
+          helm push instantai-*.tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
           helm package instantai-api
-          helm push instantai-api-$(yq e '.version' instantai-api/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }} 
+          helm push instantai-api-*.tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
