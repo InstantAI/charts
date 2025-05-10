@@ -36,14 +36,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files: |
+            instantai/Chart.yaml
+            instantai-api/Chart.yaml
+
       - name: Publish instantai chart
-        if: contains(github.event.head_commit.modified, 'instantai/Chart.yaml')
+        if: steps.changed-files.outputs.instantai_Chart_yaml == 'true'
         run: |
           helm package instantai
           helm push instantai-$(yq e '.version' instantai/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
 
       - name: Publish instantai-api chart
-        if: contains(github.event.head_commit.modified, 'instantai-api/Chart.yaml')
+        if: steps.changed-files.outputs.instantai_api_Chart_yaml == 'true'
         run: |
           helm package instantai-api
           helm push instantai-api-$(yq e '.version' instantai-api/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }} 
