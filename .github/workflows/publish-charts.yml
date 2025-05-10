@@ -1,0 +1,45 @@
+name: Publish Helm Charts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'instantai/Chart.yaml'
+      - 'instantai-api/Chart.yaml'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
+
+      - name: Set lowercase variables
+        run: |
+          echo "REPO_OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+          echo "REPO_NAME_LC=$(basename $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish charts
+        run: |
+          for chart in instantai instantai-api; do
+            if [ -f "$chart/Chart.yaml" ]; then
+              echo "Publishing $chart..."
+              helm package $chart
+              helm push $chart-$(yq e '.version' $chart/Chart.yaml).tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }} 
