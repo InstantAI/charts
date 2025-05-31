@@ -1,0 +1,36 @@
+{{- define "instantai-api.applicationConfig" -}}
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://{{ .Values.config.database.host }}:{{ .Values.config.database.port }}/{{ .Values.config.database.name }}
+    username: {{ .Values.config.database.username }}
+    password: {{ .Values.config.database.password }}
+
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://{{ .Values.config.database.host }}:{{ .Values.config.database.port }}/{{ .Values.config.database.name }}
+    user: {{ .Values.config.database.username }}
+    password: {{ .Values.config.database.password }}
+    locations: classpath:db
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: {{ .Values.config.keycloak.baseUrl }}/realms/{{ .Values.config.keycloak.realm }}/protocol/openid-connect/certs
+      client:
+        registration:
+          keycloak:
+            client-id: {{ .Values.config.keycloak.client.id }}
+            client-secret: {{ .Values.config.keycloak.client.secret }}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+            client-name: {{ .Values.config.keycloak.client.id }}
+            provider: keycloak
+        provider:
+          keycloak:
+            issuer-uri: {{ .Values.config.keycloak.baseUrl }}/realms/{{ .Values.config.keycloak.realm }}
+            authorization-uri: {{ .Values.config.keycloak.baseUrl }}/realms/{{ .Values.config.keycloak.realm }}/protocol/openid-connect/auth
+            token-uri: {{ .Values.config.keycloak.baseUrl }}/realms/{{ .Values.config.keycloak.realm }}/protocol/openid-connect/token
+            user-info-uri: {{ .Values.config.keycloak.baseUrl }}/realms/{{ .Values.config.keycloak.realm }}/protocol/openid-connect/userinfo
+{{- end -}} 

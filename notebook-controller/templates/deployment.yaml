@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "notebook-controller.fullname" . }}
+  labels:
+    {{- include "notebook-controller.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "notebook-controller.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        {{- include "notebook-controller.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "notebook-controller.serviceAccountName" . }}
+      containers:
+        - name: manager
+          command:
+            - /manager
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: USE_ISTIO
+              valueFrom:
+                configMapKeyRef:
+                  key: USE_ISTIO
+                  name: notebook-controller-config
+            - name: ISTIO_GATEWAY
+              valueFrom:
+                configMapKeyRef:
+                  key: ISTIO_GATEWAY
+                  name: notebook-controller-config
+            - name: ISTIO_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: ISTIO_HOST
+                  name: notebook-controller-config
+            - name: CLUSTER_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  key: CLUSTER_DOMAIN
+                  name: notebook-controller-config
+            - name: ENABLE_CULLING
+              valueFrom:
+                configMapKeyRef:
+                  key: ENABLE_CULLING
+                  name: notebook-controller-config
+            - name: CULL_IDLE_TIME
+              valueFrom:
+                configMapKeyRef:
+                  key: CULL_IDLE_TIME
+                  name: notebook-controller-config
+            - name: IDLENESS_CHECK_PERIOD
+              valueFrom:
+                configMapKeyRef:
+                  key: IDLENESS_CHECK_PERIOD
+                  name: notebook-controller-config
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
