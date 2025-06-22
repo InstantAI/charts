@@ -55,6 +55,7 @@ jobs:
       - name: Package and Push Helm Charts for instantai-api
         if: contains(steps.changed-files.outputs.all_changed_files, 'instantai-api/Chart.yaml')
         run: |
+          helm dependency update instantai-api
           helm package instantai-api
           helm push instantai-api-*.tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
 
