@@ -7,6 +7,7 @@ on:
     paths:
       - 'instantai/Chart.yaml'
       - 'instantai-api/Chart.yaml'
+      - 'notebook-controller/Chart.yaml'
 
 jobs:
   publish:
@@ -43,11 +44,22 @@ jobs:
           files: |
             instantai/Chart.yaml
             instantai-api/Chart.yaml
+            notebook-controller/Chart.yaml
 
-      - name: Package and Push Helm Charts
-        if: steps.changed-files.outputs.any_changed == 'true'
+      - name: Package and Push Helm Charts for instantai
+        if: contains(steps.changed-files.outputs.all_changed_files, 'instantai/Chart.yaml')
         run: |
           helm package instantai
           helm push instantai-*.tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
+
+      - name: Package and Push Helm Charts for instantai-api
+        if: contains(steps.changed-files.outputs.all_changed_files, 'instantai-api/Chart.yaml')
+        run: |
           helm package instantai-api
           helm push instantai-api-*.tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
+
+      - name: Package and Push Helm Charts for notebook-controller
+        if: contains(steps.changed-files.outputs.all_changed_files, 'notebook-controller/Chart.yaml')
+        run: |
+          helm package notebook-controller
+          helm push notebook-controller-*.tgz oci://ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
