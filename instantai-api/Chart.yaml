@@ -2,7 +2,7 @@ apiVersion: v2
 name: instantai-api
 description: A Helm chart for InstantAI API
 
-#
+
 # Application charts are a collection of templates that can be packaged into versioned archives
 # to be deployed.
 #
